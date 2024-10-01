@@ -2,6 +2,7 @@
 #[allow(unused)]
 mod image_generator;
 mod components;
+mod drawing;
 fn main() {
     match image_generator::create_image() {
         Ok(((), name)) => {

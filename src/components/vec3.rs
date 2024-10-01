@@ -5,7 +5,7 @@ use std::fmt::Display;
 #[derive(Debug, Clone , Copy, PartialEq)]
 
 pub struct Vec3{
-    values : [f32;3],
+    values : [f64;3],
 }
 
 pub type Point3 = Vec3 ;
@@ -13,38 +13,40 @@ pub type Point3 = Vec3 ;
 impl Vec3
 {
 
-    pub fn new (values:&[f32;3]) -> Vec3{
+    pub fn new (values:&[f64;3]) -> Vec3{
         Self { values: values.to_owned() }
     }
 
-    pub fn from_owned(values: [f32; 3]) -> Vec3 {
+    pub fn from_owned(values: [f64; 3]) -> Vec3 {
         Self { values }
     }
     
 
-    pub fn x(&self) -> &f32{
+    pub fn x(&self) -> &f64{
         &self.values[0]
     }
 
-    pub fn y(&self) -> &f32{
+    pub fn y(&self) -> &f64{
         &self.values[1]
     }
 
-    pub fn z(&self) -> &f32{
+    pub fn z(&self) -> &f64{
         &self.values[2]
     }
 
-    pub fn length_square(&self) -> f32{
+    pub fn length_square(&self) -> f64{
         self.values[0].powi(2) + self.values[1].powi(2) + self.values[2].powi(2)
     }
 
-    pub fn length(&self) -> f32{
-        self.length_square().sqrt()
+    pub fn length(&self) -> f64 {
+        (self.values[0].powi(2) + self.values[1].powi(2) + self.values[2].powi(2)).sqrt()
     }
 
 
-    pub fn dot(&self , other:&Vec3) -> f32{
-        self.values[0] * other.values[0] + self.values[1] * other.values[1] + self.values[2] * other.values[2]
+    pub fn dot(&self , other:&Vec3) -> f64{
+        self.values[0] * other.values[0] 
+        + self.values[1] * other.values[1] 
+        + self.values[2] * other.values[2]
     }
 
     pub fn cross(&self , other:&Vec3) -> Vec3{
@@ -56,6 +58,9 @@ impl Vec3
     }
 
     pub fn unit_vector(&self) -> Vec3{
+        if self.length() == 0.0 {
+            panic!("Cannot normalize a zero-length vector")
+        }
         self / self.length() 
     }
 
@@ -77,7 +82,7 @@ impl Neg for Vec3{
 }
 
 impl Index<usize> for Vec3{
-    type Output = f32;
+    type Output = f64;
     fn index(&self, index: usize) -> &Self::Output {
         &self.values[index]
     }
@@ -140,23 +145,23 @@ impl Mul for Vec3{
     }
 }
 
-impl Mul<f32> for &Vec3{
+impl Mul<f64> for &Vec3{
     type Output = Vec3 ;
 
-    fn mul (self , scaler:f32) -> Self::Output{
+    fn mul (self , scaler:f64) -> Self::Output{
         let res = from_fn(|i| self.values[i] * scaler);
         Vec3::new(&res)
     }
 }
 
-impl Mul<f32> for Vec3{ 
+impl Mul<f64> for Vec3{ 
     type Output = Vec3 ;
-    fn mul(self, scaler:f32) -> Self::Output{
+    fn mul(self, scaler:f64) -> Self::Output{
         &self * scaler
     }
 }
 
-impl Mul<Vec3> for f32 {
+impl Mul<Vec3> for f64 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Vec3 {
@@ -184,18 +189,18 @@ impl Div for Vec3{
     }
 }
 
-impl Div<f32> for &Vec3{
+impl Div<f64> for &Vec3{
     type Output = Vec3 ;
 
-    fn div(self, scaler:f32) -> Self::Output{
+    fn div(self, scaler:f64) -> Self::Output{
         let res = from_fn(|i| self.values[i] / scaler);
         Vec3::new(&res)
     }
 }
 
-impl Div<f32> for Vec3{
+impl Div<f64> for Vec3{
     type Output = Vec3 ;
-    fn div(self, rhs: f32) -> Self::Output {
+    fn div(self, rhs: f64) -> Self::Output {
         &self / rhs 
     }
 }
@@ -224,7 +229,7 @@ mod tests{
     fn mul_test(){
         let a = Vec3::new(&[0.2 , 0.3 , 0.4]) ;
         let b = Vec3::new(&[0.1 , 0.2, 0.3]);
-        assert_eq!(&a * &b , Vec3::new(&[0.020000001, 0.060000002, 0.120000005]));
+        assert_eq!(&a * &b , Vec3::new(&[0.020000000000000004, 0.06, 0.12] ));
     
     }
 
@@ -250,11 +255,35 @@ mod tests{
         let b = &a.clone() / 2.0;
         assert_eq!(b , Vec3::new(&[0.5 , 0.5 , 0.5 ]));
     }
-    #[test]
 
-    fn length_square_test(){
-        let a = Vec3::new(&[1.0 , 2.0 , 3.0]) ;
-        assert_eq!(a.length_square(), 14.0);
+    #[test]
+    fn test_length() {
+        let vec = Vec3 { values: [3.0, 4.0, 0.0] };
+        let len = vec.length();
+        assert_eq!(len, 5.0); // 3-4-5 triangle
+    }
+
+    #[test]
+    fn test_length_square() {
+        let vec = Vec3 { values: [3.0, 4.0, 0.0] };
+        let len_sq = vec.length_square();
+        assert_eq!(len_sq, 25.0); // 3^2 + 4^2 = 25
+    }
+
+    #[test]
+    fn test_unit_vector() {
+        let vec = Vec3 { values: [3.0, 4.0, 0.0] };
+        let unit_vec = vec.unit_vector();
+        assert_eq!(unit_vec.values[0], 0.6); // 3/5
+        assert_eq!(unit_vec.values[1], 0.8); // 4/5
+        assert_eq!(unit_vec.values[2], 0.0); // 0/5
+    }
+
+    #[test]
+    #[should_panic(expected = "Cannot normalize a zero-length vector")]
+    fn test_unit_vector_zero_length() {
+        let vec = Vec3 { values: [0.0, 0.0, 0.0] };
+        vec.unit_vector(); // This should panic
     }
 
     #[test]
