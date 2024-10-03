@@ -8,7 +8,7 @@ use vec3::{Point3, Vec3};
 
 pub fn create_image() -> Result<((), String)> {
     let name = "surface_normal_sphere.ppm".to_string();
-    let image_dir = Path::new(r"C:\Users\mchun\RustTutorials\ray_tracer_images");
+    let image_dir = Path::new(r"ray_tracer_images");
     let file_path = image_dir.join(&name);
     
     let mut data_file = File::create(&file_path)?;
