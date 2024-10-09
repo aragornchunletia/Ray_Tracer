@@ -1,9 +1,11 @@
 use std::fs::File;
 use std::io::{Write};
 use std::path::{Path};
+use std::sync::Arc;
 use anyhow::Result; // For better error handling
-use crate::components::{vec3, color, progress_bar, ray};
+use crate::components::{color, progress_bar, ray, vec3, HittableList};
 use crate::drawing;
+use crate::drawing::sphere::Sphere;
 use vec3::{Point3, Vec3};
 
 pub fn create_image() -> Result<((), String)> {
@@ -17,6 +19,10 @@ pub fn create_image() -> Result<((), String)> {
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as u32;
     let image_height = if image_height < 1 { 1 } else { image_height };
+
+    let mut world:HittableList = HittableList::new(); 
+    world.add(Arc::new(Sphere::new(Point3::new(&[0.0 , 0.0 , -1.0]), 0.5))) ;
+    world.add(Arc::new(Sphere::new(Point3::new(&[0.0, -100.5 , -1.0]) , 100.0))) ;
 
     let focal_length: f64 = 1.0;
     let viewport_height = 2.0;
@@ -53,7 +59,7 @@ pub fn create_image() -> Result<((), String)> {
             let ray_direction: Point3 = pixel_center - camera_center;
             let ray = ray::Ray::new(camera_center, ray_direction.unit_vector());
 
-            let color_pixel: color::Color = drawing::surface_normal_sphere::ray_color(&ray);
+            let color_pixel: color::Color = drawing::surface_normal_sphere::ray_color(&ray , &world);
             let _ = color::write_color(color_pixel, &mut data_file);
         }
         pb.inc(1);

@@ -20,6 +20,10 @@ impl Vec3
     pub fn from_owned(values: [f64; 3]) -> Vec3 {
         Self { values }
     }
+
+    pub fn default() -> Vec3{
+        Vec3::new(&[0.0, 0.0, 0.0])
+    }
     
 
     pub fn x(&self) -> &f64{
